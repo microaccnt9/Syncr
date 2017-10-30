@@ -1,0 +1,30 @@
+﻿<Page
+    x:Class="Syncr.Views.PivotPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="using:Syncr.Models"
+    xmlns:views="using:Syncr.Views"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Pivot x:Uid="PivotPage">
+            <PivotItem x:Uid="PivotItem_Main">
+                <Frame>
+                    <views:MainPage/>
+                </Frame>
+            </PivotItem>
+            <PivotItem x:Uid="PivotItem_Settings">
+                <Frame>
+                    <views:SettingsPage/>
+                </Frame>
+            </PivotItem>
+            <PivotItem x:Uid="PivotItem_LoginWebView">
+                <Frame>
+                    <views:LoginWebViewPage/>
+                </Frame>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

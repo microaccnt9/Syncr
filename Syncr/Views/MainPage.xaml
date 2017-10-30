@@ -1,0 +1,76 @@
+﻿<Page
+    x:Class="Syncr.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Style="{StaticResource PageStyle}"
+    mc:Ignorable="d">
+    <!--<Page.Style>
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsVisible}" Value="True">
+                <Setter Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Page.Style>-->
+    <Grid
+        x:Name="ContentArea"
+        Margin="{StaticResource MediumLeftRightMargin}">
+
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="TitleRow" Height="48"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            x:Name="TitlePage"
+            x:Uid="Main_Title"
+            Style="{StaticResource PageTitleStyle}" />
+
+        <Grid 
+            Grid.Row="1" 
+            Background="{ThemeResource SystemControlPageBackgroundChromeLowBrush}">
+            <!--The SystemControlPageBackgroundChromeLowBrush background represents where you should place your content. 
+                Place your content here.-->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1" FontSize="45" TextAlignment="Center">Syncr</TextBlock>
+                <StackPanel Grid.Column="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Image x:Name="UserIconImage" Grid.Row="0" Visibility="Collapsed" Height="48" Width="48"/>
+                        <TextBlock x:Name="UserNameText" Grid.Row="1" Visibility="Collapsed" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBox x:Name="AuthText" Grid.Row="0" Visibility="Collapsed" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" PlaceholderText="Validation code here"/>
+                        <Button x:Name="LoginButton" Grid.Row="1" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center">Log in</Button>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+            <Button x:Name="FolderButton" Grid.Row="1" HorizontalAlignment="Center" FontSize="25">Open folder to sync</Button>
+            <TextBlock x:Name="FolderText" Grid.Row="2" FontSize="25" HorizontalAlignment="Center" />
+            <ListView x:Name="DeselectList" Grid.Row="3" />
+            <Button x:Name="SyncButton" Grid.Row="4" HorizontalAlignment="Center" FontSize="25">Sync</Button>
+            <TextBlock Grid.Row="5" TextAlignment="Center" VerticalAlignment="Bottom">
+            (C) 2017 Tamas Hamor<LineBreak/>This product uses the Flickr API but is not endorsed or certified by Flickr.
+            </TextBlock>
+        </Grid>
+    </Grid>
+</Page>
