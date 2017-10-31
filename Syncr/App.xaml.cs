@@ -39,7 +39,7 @@ namespace Syncr
 
         private ActivationService CreateActivationService()
         {
-            return new ActivationService(this, typeof(Views.PivotPage));
+            return new ActivationService(this, typeof(Views.LoginPage));
         }
 
         protected override async void OnBackgroundActivated(BackgroundActivatedEventArgs args)

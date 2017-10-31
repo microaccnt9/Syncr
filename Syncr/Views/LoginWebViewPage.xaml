@@ -90,9 +90,6 @@
                 <ic:EventTriggerBehavior EventName="NavigationFailed">
                     <ic:InvokeCommandAction Command="{x:Bind ViewModel.NavFailedCommand}"/>
                 </ic:EventTriggerBehavior>
-              <ic:EventTriggerBehavior EventName="NavigationStarting">
-                <ic:InvokeCommandAction Command="{x:Bind ViewModel.NavStartingCommand}"/>
-              </ic:EventTriggerBehavior>
             </i:Interaction.Behaviors>
         </WebView>
 

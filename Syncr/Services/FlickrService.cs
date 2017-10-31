@@ -9,17 +9,19 @@ using Windows.Storage;
 
 namespace Syncr.Services
 {
-    internal class FlickrService : Observable
+    public class FlickrService : Observable
     {
+        public const string DefaultCallbackUrl = @"ms-appx-web:///assets/authenticated.html";
+
         private bool isAuthenticated;
 
-        internal bool IsAuthenticated
+        public bool IsAuthenticated
         {
             get { return isAuthenticated; }
             set { Set(ref isAuthenticated, value); }
         }
 
-        internal Flickr FlickrNet { get; }
+        public Flickr FlickrNet { get; }
 
         private OAuthRequestToken requestToken;
 
@@ -33,10 +35,23 @@ namespace Syncr.Services
             }
         }
 
-        public string UserName { get; private set; }
-        public Uri IconUri { get; private set; }
+        private string userName;
 
-        internal FlickrService()
+        public string UserName
+        {
+            get { return userName; }
+            set { Set(ref userName, value); }
+        }
+
+        private Uri iconUri;
+
+        public Uri IconUri
+        {
+            get { return iconUri; }
+            set { Set(ref iconUri, value); }
+        }
+
+        public FlickrService()
         {
             FlickrNet = new Flickr("5cc521a6a8599edbd471fa9c59c30260", "13fdeeb5eb5539d8");
             var localSettings = ApplicationData.Current.LocalSettings;
@@ -56,16 +71,20 @@ namespace Syncr.Services
                 var oAuthRequestToken = requestTokens.ToString().Split('|');
                 requestToken = new OAuthRequestToken { Token = oAuthRequestToken[0], TokenSecret = oAuthRequestToken[1] };
             }
-            CheckLogin();
         }
 
-        internal async Task<Uri> GetAuthPageUriAsync(string callbackUrl = "syncr:syncrapp")
+        internal async Task InitialiseAsync()
+        {
+            await CheckLogin();
+        }
+
+        public async Task<string> GetAuthPageUrlAsync(string callbackUrl = DefaultCallbackUrl)
         {
             RequestToken = await FlickrNet.OAuthRequestTokenAsync(callbackUrl);
-            return new Uri(FlickrNet.OAuthCalculateAuthorizationUrl(RequestToken.Token, AuthLevel.Write));
+            return FlickrNet.OAuthCalculateAuthorizationUrl(RequestToken.Token, AuthLevel.Write);
         }
 
-        internal async Task<bool> AuthenticateAsync(string validation)
+        public async Task<bool> AuthenticateAsync(string validation)
         {
             var accessToken = await FlickrNet.OAuthAccessTokenAsync(requestToken.Token, requestToken.TokenSecret, validation);
             FlickrNet.OAuthAccessToken = accessToken.Token;

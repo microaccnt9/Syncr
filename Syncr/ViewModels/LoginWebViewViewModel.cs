@@ -5,14 +5,14 @@ using Syncr.Helpers;
 
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Syncr.Services;
+using Syncr.Views;
+using System.Text.RegularExpressions;
 
 namespace Syncr.ViewModels
 {
     public class LoginWebViewViewModel : Observable
     {
-        // TODO WTS: Set the URI of the page to show by default
-        private const string DefaultUrl = "https://developer.microsoft.com/en-us/windows/apps";
-
         private Uri _source;
 
         public Uri Source
@@ -87,18 +87,29 @@ namespace Syncr.ViewModels
             {
                 if (_navCompleted == null)
                 {
-                    _navCompleted = new RelayCommand<WebViewNavigationCompletedEventArgs>(NavCompleted);
+                    _navCompleted = new RelayCommand<WebViewNavigationCompletedEventArgs>(NavCompletedAsync);
                 }
 
                 return _navCompleted;
             }
         }
 
-        private void NavCompleted(WebViewNavigationCompletedEventArgs e)
+        private async void NavCompletedAsync(WebViewNavigationCompletedEventArgs e)
         {
             IsLoading = false;
             OnPropertyChanged(nameof(BrowserBackCommand));
             OnPropertyChanged(nameof(BrowserForwardCommand));
+            if (e.IsSuccess && e.Uri.ToString().StartsWith("ms-appx-web:", StringComparison.OrdinalIgnoreCase)
+                && await Singleton<FlickrService>.Instance.AuthenticateAsync(GetOAuthVerifier(e.Uri)))
+            {
+                NavigationService.Navigate<PivotPage>();
+            }
+        }
+
+        private string GetOAuthVerifier(Uri uri)
+        {
+            var match = new Regex(@"oauth_verifier=([a-f0-9]+)", RegexOptions.CultureInvariant).Match(uri.Query);
+            return match.Groups.Count > 1 ? match.Groups[match.Groups.Count - 1].Value : "";
         }
 
         private ICommand _navFailed;
@@ -114,25 +125,6 @@ namespace Syncr.ViewModels
 
                 return _navFailed;
             }
-        }
-
-        private ICommand _navigationStarting;
-
-        public ICommand NavStartingCommand
-        {
-            get
-            {
-                if (_navigationStarting == null)
-                {
-                    _navigationStarting = new RelayCommand<WebViewNavigationStartingEventArgs>(NavStarting);
-                }
-
-                return _navigationStarting;
-            }
-        }
-
-        private void NavStarting(WebViewNavigationStartingEventArgs obj)
-        {
         }
 
         private void NavFailed(WebViewNavigationFailedEventArgs e)
@@ -226,10 +218,15 @@ namespace Syncr.ViewModels
 
         private WebView _webView;
 
-        public LoginWebViewViewModel()
+        public LoginWebViewViewModel(string url = FlickrService.DefaultCallbackUrl)
+        {
+            NavigateTo(url);
+        }
+
+        public void NavigateTo(string url)
         {
             IsLoading = true;
-            Source = new Uri(DefaultUrl);
+            Source = new Uri(url);
         }
 
         public void Initialize(WebView webView)

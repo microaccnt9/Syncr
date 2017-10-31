@@ -3,6 +3,7 @@
 using Syncr.ViewModels;
 
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Navigation;
 
 namespace Syncr.Views
 {
@@ -14,6 +15,12 @@ namespace Syncr.Views
         {
             InitializeComponent();
             ViewModel.Initialize(webView);
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            ViewModel.NavigateTo(e.Parameter.ToString());
         }
     }
 }

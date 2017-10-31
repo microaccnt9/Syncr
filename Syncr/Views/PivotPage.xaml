@@ -20,11 +20,6 @@
                     <views:SettingsPage/>
                 </Frame>
             </PivotItem>
-            <PivotItem x:Uid="PivotItem_LoginWebView">
-                <Frame>
-                    <views:LoginWebViewPage/>
-                </Frame>
-            </PivotItem>
         </Pivot>
     </Grid>
 </Page>
