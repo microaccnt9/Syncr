@@ -1,11 +1,11 @@
 ﻿<Page
-    x:Class="Syncr.Views.LoginPage"
+    x:Class="Syncr.Views.SyncPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Style="{StaticResource PageStyle}"
-    mc:Ignorable="d" Loaded="Page_LoadedAsync">
+    mc:Ignorable="d">
     <Grid
         x:Name="ContentArea"
         Margin="{StaticResource MediumLeftRightMargin}">
@@ -17,7 +17,7 @@
 
         <TextBlock
             x:Name="TitlePage"
-            x:Uid="Login_Title"
+            x:Uid="Sync_Title"
             Style="{StaticResource PageTitleStyle}" />
 
         <Grid 
@@ -26,13 +26,15 @@
             <!--The SystemControlPageBackgroundChromeLowBrush background represents where you should place your content. 
                 Place your content here.-->
             <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="3*"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="2*"/>
             </Grid.RowDefinitions>
-            <ProgressRing Grid.Row="1" IsActive="True" Width="50" Height="50"/>
-            <TextBlock x:Uid="LoginPage_LoadingText" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+            <TextBlock Grid.Row="0" HorizontalAlignment="Center">Synchronising</TextBlock>
+            <TextBlock Grid.Row="1" HorizontalAlignment="Center" Text="{x:Bind ViewModel.CurrentOperationDescription}"/>
+            <ProgressBar Grid.Row="2" Value="{x:Bind ViewModel.ProgressValue}"/>
+            <Button Grid.Row="3" HorizontalAlignment="Center" Command="{x:Bind ViewModel.CancelCommand}">Cancel</Button>
         </Grid>
     </Grid>
 </Page>

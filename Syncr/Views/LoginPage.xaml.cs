@@ -3,6 +3,7 @@
 using Windows.UI.Xaml.Controls;
 using Syncr.Services;
 using Syncr.Helpers;
+using Windows.UI.Xaml;
 
 namespace Syncr.Views
 {
@@ -13,7 +14,7 @@ namespace Syncr.Views
             InitializeComponent();
         }
 
-        private async void Page_LoadedAsync(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void Page_LoadedAsync(object sender, RoutedEventArgs e)
         {
             await Singleton<FlickrService>.Instance.InitialiseAsync();
             if (Singleton<FlickrService>.Instance.IsAuthenticated)

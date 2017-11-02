@@ -244,4 +244,12 @@
   <data name="LoginPage_LoadingText.Text" xml:space="preserve">
     <value>Logging you in...</value>
   </data>
+  <data name="Sync_Title.Text" xml:space="preserve">
+    <value>Sync</value>
+    <comment>Page title for Sync</comment>
+  </data>
+  <data name="PivotItem_Sync.Header" xml:space="preserve">
+    <value>Sync</value>
+    <comment>Pivot item header for Sync</comment>
+  </data>
 </root>

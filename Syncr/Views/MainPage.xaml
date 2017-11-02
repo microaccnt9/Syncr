@@ -18,12 +18,20 @@
                 <Image Grid.Row="0" Height="48" Width="48" Source="{x:Bind ViewModel.Icon}"/>
                 <TextBlock Grid.Row="1" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Bind ViewModel.UserName}"/>
             </Grid>
-            <Button x:Name="FolderButton" HorizontalAlignment="Center" FontSize="25">Open folder to sync</Button>
-            <TextBlock x:Name="FolderText" FontSize="25" HorizontalAlignment="Center" />
-            <ScrollViewer>
-                <ListView x:Name="DeselectList" />
-            </ScrollViewer>
-            <Button x:Name="SyncButton" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25">Sync</Button>
+            <Button HorizontalAlignment="Center" FontSize="25" Command="{x:Bind ViewModel.FolderSelection}">Open folder to sync</Button>
+            <TextBlock FontSize="25" HorizontalAlignment="Center" Text="{x:Bind ViewModel.SyncFolderPath}" />
+            <!--<ScrollViewer>
+                <ListView ItemsSource="{x:Bind ViewModel.Roots}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="model:IEmployee">
+                            <Grid>
+                                <TextBlock Text="{x:Bind Name}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>-->
+            <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25" Command="{x:Bind ViewModel.SyncCommand}">Sync</Button>
         </StackPanel>
     </Grid>
 </Page>
