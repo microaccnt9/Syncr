@@ -134,6 +134,7 @@
     <Compile Include="Services\ThemeSelectorService.cs" />
     <Compile Include="Services\ToastNotificationsService.cs" />
     <Compile Include="Services\ToastNotificationsService.Samples.cs" />
+    <Compile Include="Helpers\BackgroundThreadObservable.cs" />
     <Compile Include="ViewModels\LoginWebViewViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\PivotViewModel.cs" />

@@ -10,15 +10,17 @@ using Syncr.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using Windows.Storage.Search;
+using FlickrNet;
 
 namespace Syncr.ViewModels
 {
-    public class SyncViewModel : Observable
+    public class SyncViewModel : BackgroundThreadObservable
     {
         private string[] extensions = { ".jpeg", ".jpg", ".png", ".gif", ".mp4", ".avi", ".wmv", ".mov", ".mpeg", ".mpg", ".m2v", ".3gp", ".m2ts", ".ogg", ".ogv" };
-        private IStorageFolder syncFolder;
+        private StorageFolder syncFolder;
 
-        public IStorageFolder SyncFolder
+        public StorageFolder SyncFolder
         {
             get { return syncFolder; }
             set { Set(ref syncFolder, value); }
@@ -39,6 +41,15 @@ namespace Syncr.ViewModels
             get { return progressValue; }
             set { Set(ref progressValue, value); }
         }
+
+        private double progressMax;
+
+        public double ProgressMax
+        {
+            get { return progressMax; }
+            set { Set(ref progressMax, value); }
+        }
+
 
         private ICommand cancelCommand;
 
@@ -61,39 +72,51 @@ namespace Syncr.ViewModels
         private void Cancel()
         {
             Interlocked.Exchange(ref isCancelRequested, 1);
+            OnPropertyChanged(nameof(CancelCommand));
         }
 
-        public SyncViewModel()
+        internal void StartProcessing()
         {
-            ProgressValue = 0.4;
             ProcessingTask = Task.Factory.StartNew(SynchronizeAsync);
-//            ProcessingTask.ContinueWith(t => NavigationService.GoBack()); //TODO: on UI thread
+            ProcessingTask.ContinueWith(t =>  OnUiThread(() => NavigationService.GoBack()));
         }
 
         private async void SynchronizeAsync()
         {
             var flickr = Singleton<FlickrService>.Instance.FlickrNet;
-            var files = new List<IStorageFile>();
-            var folderQueue = new Queue<IStorageFolder>(new[] { syncFolder });
-            while (folderQueue.Count > 0)
+
+            CurrentOperationDescription = $"Parsing folder \"{SyncFolder.Path}\"";
+            var queryResult = SyncFolder.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.DefaultQuery, extensions));
+            var files = await queryResult.GetFilesAsync();
+            ProgressMax = files.Count;
+
+            var groupedFiles = files.GroupBy(f => Path.GetDirectoryName(f.Path));
+
+            foreach (var group in groupedFiles)
             {
-                var folder = folderQueue.Dequeue();
-                var items = await folder.GetItemsAsync();
-                foreach (var item in items)
+                Photoset photoset = null;
+                var photosetName = Path.GetFileName(group.Key);
+                foreach (var file in group)
                 {
-                    var photoset = await flickr.PhotosetsCreateAsync(folder.Name, folder.Path);
-                    if (item.IsOfType(StorageItemTypes.Folder))
+                    CurrentOperationDescription = $"Uploading file \"{file.Path}\"";
+                    string photoId = null;
+                    using (var stream = (await file.OpenSequentialReadAsync()).AsStreamForRead())
                     {
-                        folderQueue.Enqueue((IStorageFolder)item);
+                        photoId = await flickr.UploadPictureAsync(stream, file.Name, file.Name, file.Path, "", false, false, false, FlickrNet.ContentType.Photo, FlickrNet.SafetyLevel.None, FlickrNet.HiddenFromSearch.Hidden);
                     }
-                    else if (item.IsOfType(StorageItemTypes.File) && extensions.Any(ext => item.Name.EndsWith(ext, StringComparison.CurrentCultureIgnoreCase)))
+
+                    if (photoset == null)
                     {
-                        using (var stream = (await ((IStorageFile)item).OpenSequentialReadAsync()).AsStreamForRead())
-                        {
-                            var result = await flickr.UploadPictureAsync(stream, item.Name, item.Name, item.Path, "", false, false, false, FlickrNet.ContentType.Photo, FlickrNet.SafetyLevel.None, FlickrNet.HiddenFromSearch.Hidden);
-                            await flickr.PhotosetsAddPhotoAsync(photoset.PhotosetId, result);
-                        }
+                        CurrentOperationDescription = $"Creating photoset \"{photosetName}\"";
+                        photoset = await flickr.PhotosetsCreateAsync(photosetName, "", photoId);
                     }
+                    else
+                    {
+                        CurrentOperationDescription = $"Adding file \"{file.Name}\" to photoset \"{photosetName}\"";
+                        await flickr.PhotosetsAddPhotoAsync(photoset.PhotosetId, photoId);
+                    }
+
+                    ProgressValue++;
                 }
             }
         }

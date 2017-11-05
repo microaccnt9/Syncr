@@ -32,9 +32,9 @@
                 <RowDefinition Height="2*"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" HorizontalAlignment="Center">Synchronising</TextBlock>
-            <TextBlock Grid.Row="1" HorizontalAlignment="Center" Text="{x:Bind ViewModel.CurrentOperationDescription}"/>
-            <ProgressBar Grid.Row="2" Value="{x:Bind ViewModel.ProgressValue}"/>
-            <Button Grid.Row="3" HorizontalAlignment="Center" Command="{x:Bind ViewModel.CancelCommand}">Cancel</Button>
+            <TextBlock Grid.Row="1" HorizontalAlignment="Center" Text="{x:Bind ViewModel.CurrentOperationDescription, Mode=OneWay}"/>
+            <ProgressBar Grid.Row="2" Minimum="0" Maximum="{x:Bind ViewModel.ProgressMax, Mode=OneWay}" IsIndeterminate="False" Value="{x:Bind ViewModel.ProgressValue, Mode=OneWay}"/>
+            <Button Grid.Row="3" HorizontalAlignment="Center" Command="{x:Bind ViewModel.CancelCommand, Mode=OneWay}">Cancel</Button>
         </Grid>
     </Grid>
 </Page>

@@ -37,9 +37,9 @@ namespace Syncr.ViewModels
             set { Set(ref icon, value); }
         }
 
-        private IStorageFolder syncFolder;
+        private StorageFolder syncFolder;
 
-        public IStorageFolder SyncFolder
+        public StorageFolder SyncFolder
         {
             get { return syncFolder; }
             set
@@ -49,6 +49,7 @@ namespace Syncr.ViewModels
                 Set(ref syncFolder, value);
                 SyncFolderPath = value.Path;
                 OnPropertyChanged(nameof(SyncFolderPath));
+                OnPropertyChanged(nameof(SyncCommand));
             }
         }
 

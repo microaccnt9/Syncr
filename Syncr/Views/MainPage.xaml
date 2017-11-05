@@ -19,7 +19,7 @@
                 <TextBlock Grid.Row="1" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Bind ViewModel.UserName}"/>
             </Grid>
             <Button HorizontalAlignment="Center" FontSize="25" Command="{x:Bind ViewModel.FolderSelection}">Open folder to sync</Button>
-            <TextBlock FontSize="25" HorizontalAlignment="Center" Text="{x:Bind ViewModel.SyncFolderPath}" />
+            <TextBlock FontSize="25" HorizontalAlignment="Center" Text="{x:Bind ViewModel.SyncFolderPath, Mode=OneWay}" />
             <!--<ScrollViewer>
                 <ListView ItemsSource="{x:Bind ViewModel.Roots}">
                     <ListView.ItemTemplate>
@@ -31,7 +31,7 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </ScrollViewer>-->
-            <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25" Command="{x:Bind ViewModel.SyncCommand}">Sync</Button>
+            <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25" Command="{x:Bind ViewModel.SyncCommand, Mode=OneWay}">Sync</Button>
         </StackPanel>
     </Grid>
 </Page>

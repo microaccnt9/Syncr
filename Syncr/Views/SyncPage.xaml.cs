@@ -20,7 +20,8 @@ namespace Syncr.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            ViewModel.SyncFolder = (IStorageFolder)e.Parameter;
+            ViewModel.SyncFolder = (StorageFolder)e.Parameter;
+            ViewModel.StartProcessing();
         }
     }
 }
