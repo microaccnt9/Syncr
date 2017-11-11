@@ -11,7 +11,7 @@ using Syncr.Views;
 
 namespace Syncr.ViewModels
 {
-    public class MainViewModel : Observable
+    public class MainViewModel : BackgroundThreadObservable
     {
         private FlickrService flickrService;
 

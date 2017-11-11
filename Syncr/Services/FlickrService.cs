@@ -80,13 +80,13 @@ namespace Syncr.Services
 
         public async Task<string> GetAuthPageUrlAsync(string callbackUrl = DefaultCallbackUrl)
         {
-            RequestToken = await FlickrNet.OAuthRequestTokenAsync(callbackUrl);
+            RequestToken = await FlickrNet.RetryOnFailureAsync(f => f.OAuthRequestTokenAsync(callbackUrl));
             return FlickrNet.OAuthCalculateAuthorizationUrl(RequestToken.Token, AuthLevel.Write);
         }
 
         public async Task<bool> AuthenticateAsync(string validation)
         {
-            var accessToken = await FlickrNet.OAuthAccessTokenAsync(requestToken.Token, requestToken.TokenSecret, validation);
+            var accessToken = await FlickrNet.RetryOnFailureAsync(f => f.OAuthAccessTokenAsync(requestToken.Token, requestToken.TokenSecret, validation));
             FlickrNet.OAuthAccessToken = accessToken.Token;
             FlickrNet.OAuthAccessTokenSecret = accessToken.TokenSecret;
             if (await CheckLogin())
@@ -106,11 +106,11 @@ namespace Syncr.Services
                 IsAuthenticated = false;
                 return IsAuthenticated;
             }
-            var user = await FlickrNet.TestLoginAsync();
+            var user = await FlickrNet.RetryOnFailureAsync(f => f.TestLoginAsync());
             if (user != null)
             {
                 UserName = user.UserName;
-                var info = await FlickrNet.PeopleGetInfoAsync(user.UserId);
+                var info = await FlickrNet.RetryOnFailureAsync(f => f.PeopleGetInfoAsync(user.UserId));
                 IconUri = new Uri(int.TryParse(info.IconServer, out int iconServer) && iconServer > 0
                     ? $"http://farm{info.IconFarm}.staticflickr.com/{iconServer}/buddyicons/{user.UserId}.jpg"
                     : "https://www.flickr.com/images/buddyicon.gif");

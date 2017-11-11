@@ -119,6 +119,8 @@
     <Compile Include="BackgroundTasks\BackgroundTask.cs" />
     <Compile Include="BackgroundTasks\SyncBackgroundTask.cs" />
     <Compile Include="Helpers\EnumToBooleanConverter.cs" />
+    <Compile Include="Helpers\FlickrExtensions.cs" />
+    <Compile Include="Helpers\GenericEqualityComparer.cs" />
     <Compile Include="Helpers\Json.cs" />
     <Compile Include="Helpers\Observable.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
