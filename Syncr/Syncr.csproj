@@ -133,6 +133,7 @@
     <Compile Include="Services\LiveTileService.cs" />
     <Compile Include="Services\LiveTileService.Samples.cs" />
     <Compile Include="Services\NavigationService.cs" />
+    <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\ThemeSelectorService.cs" />
     <Compile Include="Services\ToastNotificationsService.cs" />
     <Compile Include="Services\ToastNotificationsService.Samples.cs" />
@@ -238,8 +239,14 @@
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\PRIVACYPOLICY.txt">
+      <Link>Assets\PRIVACYPOLICY.txt</Link>
+    </Content>
     <Content Include="Assets\authenticated.html" />
     <Content Include="Assets\Logo.png" />
+    <None Include="..\LICENSE">
+      <Link>Assets\LICENSE</Link>
+    </None>
     <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />

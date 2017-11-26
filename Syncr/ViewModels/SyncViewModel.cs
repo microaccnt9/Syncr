@@ -11,7 +11,7 @@ using System.IO;
 using Windows.Storage.Search;
 using FlickrNet;
 using System.Collections.Generic;
-using System.Net;
+using static Syncr.Services.SettingsService;
 
 namespace Syncr.ViewModels
 {
@@ -84,6 +84,7 @@ namespace Syncr.ViewModels
         private async void SynchronizeAsync()
         {
             var flickr = Singleton<FlickrService>.Instance.FlickrNet;
+            var functionMode = Singleton<SettingsService>.Instance.Mode;
 
             CurrentOperationDescription = $"Parsing folder \"{SyncFolder.Path}\"";
             var queryResult = SyncFolder.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.DefaultQuery, extensions) { FolderDepth = FolderDepth.Deep });
@@ -116,28 +117,32 @@ namespace Syncr.ViewModels
                         ProgressValue++;
                         continue;
                     }
-                    CurrentOperationDescription = $"Uploading file \"{file.Path}\"";
-                    string photoId = null;
-                    using (var stream = (await file.OpenSequentialReadAsync()).AsStreamForRead())
-                    {
-                        photoId = await flickr.UploadPictureAsync(stream, file.Name, file.Name, file.Path.Replace(SyncFolder.Path, "."), "", false, false, false, ContentType.Photo, SafetyLevel.None, HiddenFromSearch.Hidden);
-                    }
 
-                    if (photoset == null)
+                    if (functionMode != FunctionMode.DownloadOnly)
                     {
-                        CurrentOperationDescription = $"Creating photoset \"{photosetName}\"";
-                        photoset = await flickr.PhotosetsCreateAsync(photosetName, photosetDescription, photoId);
-                    }
-                    else
-                    {
-                        CurrentOperationDescription = $"Adding file \"{file.Name}\" to photoset \"{photosetName}\"";
-                        await flickr.PhotosetsAddPhotoAsync(photoset.PhotosetId, photoId);
+                        CurrentOperationDescription = $"Uploading file \"{file.Path}\"";
+                        string photoId = null;
+                        using (var stream = (await file.OpenSequentialReadAsync()).AsStreamForRead())
+                        {
+                            photoId = await flickr.UploadPictureAsync(stream, file.Name, file.Name, file.Path.Replace(SyncFolder.Path, "."), "", false, false, false, ContentType.Photo, SafetyLevel.None, HiddenFromSearch.Hidden);
+                        }
+
+                        if (photoset == null)
+                        {
+                            CurrentOperationDescription = $"Creating photoset \"{photosetName}\"";
+                            photoset = await flickr.PhotosetsCreateAsync(photosetName, photosetDescription, photoId);
+                        }
+                        else
+                        {
+                            CurrentOperationDescription = $"Adding file \"{file.Name}\" to photoset \"{photosetName}\"";
+                            await flickr.PhotosetsAddPhotoAsync(photoset.PhotosetId, photoId);
+                        }
                     }
 
                     ProgressValue++;
                 }
 
-                if (photos.Count > 0)
+                if (photos.Count > 0 && functionMode != FunctionMode.UploadOnly)
                 {
                     ProgressMax += photos.Count;
                     var folder = await StorageFolder.GetFolderFromPathAsync(group.Key);
@@ -150,18 +155,22 @@ namespace Syncr.ViewModels
                 }
                 photosets.Remove(photosetDescription);
             }
-            foreach (var photoset in photosets.Values)
+            if (functionMode != FunctionMode.UploadOnly)
             {
-                var folder = await CreateFolderRecursivelyAsync(SyncFolder, photoset.Description.Substring(1));
-                var photos = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
-                ProgressMax += photos.Count;
-                foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
+                foreach (var photoset in photosets.Values)
                 {
-                    CurrentOperationDescription = $"Downloading {photo.Title}";
-                    await flickr.DownloadFileAsync(folder, photo);
-                    ProgressValue++;
+                    var folder = await CreateFolderRecursivelyAsync(SyncFolder, photoset.Description.Substring(1));
+                    var photos = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
+                    ProgressMax += photos.Count;
+                    foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
+                    {
+                        CurrentOperationDescription = $"Downloading {photo.Title}";
+                        await flickr.DownloadFileAsync(folder, photo);
+                        ProgressValue++;
+                    }
                 }
             }
+
             ProgressValue = ProgressMax;
             CurrentOperationDescription = "Finished.";
         }

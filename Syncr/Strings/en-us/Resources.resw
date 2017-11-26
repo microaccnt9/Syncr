@@ -154,7 +154,7 @@
     <comment>About this application title for Settings</comment>
   </data>
   <data name="Settings_AboutDescription.Text" xml:space="preserve">
-    <value>Copyright 2017 by Tamas Hamor. This product uses the Flickr API but is not endorsed or certified by Flickr.</value>
+    <value>Copyright 2017 by Tamas Hamor. This product uses the Flickr API but is not endorsed or certified by Flickr. I take no responsibility for lost or damaged files, use at your own risk!</value>
     <comment>About this application description for Settings</comment>
   </data>
   <data name="Settings_PrivacyTermsLink.Content" xml:space="preserve">
@@ -162,7 +162,7 @@
     <comment>Privacy Statement link content for Settings</comment>
   </data>
   <data name="Settings_PrivacyTermsLink.NavigateUri" xml:space="preserve">
-    <value>https://YourPrivacyUrlGoesHere/</value>
+    <value>ms-appx-web:///assets/PRIVACYPOLICY.txt</value>
     <comment>Here is your Privacy Statement url for Settings</comment>
   </data>
   <data name="Settings_Personalization.Text" xml:space="preserve">
@@ -251,5 +251,9 @@
   <data name="PivotItem_Sync.Header" xml:space="preserve">
     <value>Sync</value>
     <comment>Pivot item header for Sync</comment>
+  </data>
+  <data name="Settings_Mode.Text" xml:space="preserve">
+    <value>Choose Mode of Operation</value>
+    <comment>Choose theme text for Settings</comment>
   </data>
 </root>

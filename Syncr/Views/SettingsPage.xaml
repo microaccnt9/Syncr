@@ -53,11 +53,19 @@
             </StackPanel>
         </StackPanel>
 
+        <!--<ComboBox x:Uid="Settings_Mode" ItemsSource="{x:Bind ViewModel.Modes}" SelectedItem="{x:Bind ViewModel.SelectedMode, Mode=TwoWay}" />-->
+        <StackPanel Margin="{StaticResource SettingsSubheaderMargin}">
+            <TextBlock
+                        x:Uid="Settings_Mode"
+                        Style="{StaticResource BodyTextStyle}" />
+            <ListView ItemsSource="{x:Bind ViewModel.Modes}" SelectedItem="{x:Bind ViewModel.SelectedMode, Mode=TwoWay}" SelectionMode="Single" />
+        </StackPanel>
+
         <TextBlock
                         x:Uid="Settings_About"
                         Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-        <StackPanel Margin="{StaticResource EightTopMargin}">
+        <StackPanel Margin="{StaticResource SettingsSubheaderMargin}">
             <TextBlock
                         Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" />
             <TextBlock

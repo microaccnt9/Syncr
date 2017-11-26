@@ -6,6 +6,9 @@ using Syncr.Services;
 
 using Windows.ApplicationModel;
 using Windows.UI.Xaml;
+using System.Linq;
+using System.Collections.Generic;
+using static Syncr.Services.SettingsService;
 
 namespace Syncr.ViewModels
 {
@@ -47,6 +50,25 @@ namespace Syncr.ViewModels
                 }
 
                 return _switchThemeCommand;
+            }
+        }
+
+        public IEnumerable<string> Modes => SettingsService.Modes.Select(mode => mode.ToString());
+
+        public string SelectedMode
+        {
+            get
+            {
+                return Singleton<SettingsService>.Instance.Mode.ToString();
+            }
+
+            set
+            {
+                if (Enum.TryParse(value, out FunctionMode functionMode) && !functionMode.Equals(Singleton<SettingsService>.Instance.Mode))
+                {
+                    Singleton<SettingsService>.Instance.Mode = functionMode;
+                    OnPropertyChanged(nameof(SelectedMode));
+                }
             }
         }
 
