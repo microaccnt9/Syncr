@@ -184,7 +184,7 @@ namespace Syncr.ViewModels
                 }
 
                 ProgressValue = ProgressMax;
-                CurrentOperationDescription = "Finished.";
+                CurrentOperationDescription = "Sync_FinishedStatus".GetLocalized();
             }
             catch (Exception)
             {

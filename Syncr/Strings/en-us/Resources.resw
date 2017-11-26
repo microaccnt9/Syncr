@@ -280,4 +280,7 @@
   <data name="Sync_UploadingFileStatus" xml:space="preserve">
     <value>Uploading file "{0}"</value>
   </data>
+  <data name="Sync_FinishedStatus" xml:space="preserve">
+    <value>Finished.</value>
+  </data>
 </root>
