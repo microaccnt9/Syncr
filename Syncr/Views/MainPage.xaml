@@ -9,8 +9,17 @@
     <Grid
         x:Name="ContentArea"
         Margin="{StaticResource MediumLeftRightMargin}">
-        <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-            <Grid HorizontalAlignment="Right" VerticalAlignment="Top">
+        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
@@ -18,8 +27,8 @@
                 <Image Grid.Row="0" Height="48" Width="48" Source="{x:Bind ViewModel.Icon}"/>
                 <TextBlock Grid.Row="1" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Bind ViewModel.UserName}"/>
             </Grid>
-            <Button HorizontalAlignment="Center" FontSize="25" Command="{x:Bind ViewModel.FolderSelection}">Open folder to sync</Button>
-            <TextBlock FontSize="25" HorizontalAlignment="Center" Text="{x:Bind ViewModel.SyncFolderPath, Mode=OneWay}" />
+            <Button x:Uid="Main_OpenFolderToSync" Grid.Row="2" HorizontalAlignment="Center" FontSize="25" Command="{x:Bind ViewModel.FolderSelection}"/>
+            <TextBlock Grid.Row="3" FontSize="25" HorizontalAlignment="Center" Text="{x:Bind ViewModel.SyncFolderPath, Mode=OneWay}"/>
             <!--<ScrollViewer>
                 <ListView ItemsSource="{x:Bind ViewModel.Roots}">
                     <ListView.ItemTemplate>
@@ -31,7 +40,7 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </ScrollViewer>-->
-            <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25" Command="{x:Bind ViewModel.SyncCommand, Mode=OneWay}">Sync</Button>
-        </StackPanel>
+            <Button x:Uid="Main_Sync" Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25" Command="{x:Bind ViewModel.SyncCommand, Mode=OneWay}"/>
+        </Grid>
     </Grid>
 </Page>

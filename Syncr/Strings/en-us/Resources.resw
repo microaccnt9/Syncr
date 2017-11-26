@@ -245,7 +245,7 @@
     <value>Logging you in...</value>
   </data>
   <data name="Sync_Title.Text" xml:space="preserve">
-    <value>Sync</value>
+    <value>Synchronising</value>
     <comment>Page title for Sync</comment>
   </data>
   <data name="PivotItem_Sync.Header" xml:space="preserve">
@@ -255,5 +255,29 @@
   <data name="Settings_Mode.Text" xml:space="preserve">
     <value>Choose Mode of Operation</value>
     <comment>Choose theme text for Settings</comment>
+  </data>
+  <data name="Main_OpenFolderToSync.Content" xml:space="preserve">
+    <value>Change folder to sync</value>
+  </data>
+  <data name="Main_Sync.Content" xml:space="preserve">
+    <value>Synchronize</value>
+  </data>
+  <data name="Sync_AddingFileToPhotoSet" xml:space="preserve">
+    <value>Adding file "{0}" to photoset "{1}"</value>
+  </data>
+  <data name="Sync_CancellingStatus" xml:space="preserve">
+    <value>Cancelling operations...</value>
+  </data>
+  <data name="Sync_CreatingPhotoSetStatus" xml:space="preserve">
+    <value>Creating photoset "{0}"</value>
+  </data>
+  <data name="Sync_DownloadingFile" xml:space="preserve">
+    <value>Downloading "{0}"</value>
+  </data>
+  <data name="Sync_ParsingFolderStatus" xml:space="preserve">
+    <value>Parsing folder "{0}"</value>
+  </data>
+  <data name="Sync_UploadingFileStatus" xml:space="preserve">
+    <value>Uploading file "{0}"</value>
   </data>
 </root>

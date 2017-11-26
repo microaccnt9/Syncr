@@ -17,7 +17,7 @@ namespace Syncr.ViewModels
 {
     public class SyncViewModel : BackgroundThreadObservable
     {
-        private string[] extensions = { ".jpeg", ".jpg", ".png", ".gif", ".mp4", ".avi", ".wmv", ".mov", ".mpeg", ".mpg", ".m2v", ".3gp", ".m2ts", ".ogg", ".ogv" };
+        private string[] extensions = { ".jpeg", ".jpg", ".png", ".gif", /*".mp4", ".avi", ".wmv", ".mov", ".mpeg", ".mpg", ".m2v", ".3gp", ".m2ts", ".ogg", ".ogv"*/ };
         private StorageFolder syncFolder;
 
         public StorageFolder SyncFolder
@@ -50,6 +50,13 @@ namespace Syncr.ViewModels
             set { Set(ref progressMax, value); }
         }
 
+        private bool isProgressIndeterminate;
+
+        public bool IsProgressIndeterminate
+        {
+            get { return isProgressIndeterminate; }
+            set { Set(ref isProgressIndeterminate, value); }
+        }
 
         private ICommand cancelCommand;
 
@@ -59,127 +66,141 @@ namespace Syncr.ViewModels
             {
                 if (cancelCommand == null)
                 {
-                    cancelCommand = new RelayCommand(Cancel, () => isCancelRequested == 0);
+                    cancelCommand = new RelayCommand(Cancel, () => !cancellationTokenSource.IsCancellationRequested);
                 }
                 return cancelCommand;
             }
         }
 
-        public Task ProcessingTask { get; private set; }
-
-        private int isCancelRequested;
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         private void Cancel()
         {
-            Interlocked.Exchange(ref isCancelRequested, 1);
+            CurrentOperationDescription = "Sync_CancellingStatus".GetLocalized();
+            IsProgressIndeterminate = true;
+            cancellationTokenSource.Cancel();
             OnPropertyChanged(nameof(CancelCommand));
         }
 
         internal void StartProcessing()
         {
-            ProcessingTask = Task.Factory.StartNew(SynchronizeAsync);
-            ProcessingTask.ContinueWith(t =>  OnUiThread(() => NavigationService.GoBack()));
+            SynchronizeAsync(cancellationTokenSource.Token).ContinueWith(t =>  OnUiThread(() => NavigationService.GoBack()));
         }
 
-        private async void SynchronizeAsync()
+        private async Task SynchronizeAsync(CancellationToken cancellationToken)
         {
             var flickr = Singleton<FlickrService>.Instance.FlickrNet;
             var functionMode = Singleton<SettingsService>.Instance.Mode;
 
-            CurrentOperationDescription = $"Parsing folder \"{SyncFolder.Path}\"";
-            var queryResult = SyncFolder.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.DefaultQuery, extensions) { FolderDepth = FolderDepth.Deep });
-            var files = await queryResult.GetFilesAsync();
-            ProgressMax = files.Count;
-
-            var photosetsList = await flickr.PhotosetsGetListAsync();
-            var photosets = photosetsList.Where(ps => !string.IsNullOrWhiteSpace(ps.Description) && ps.Description[0] == '`')
-                .Distinct(new GenericEqualityComparer<Photoset>(ps => ps.Description)).ToDictionary(ps => ps.Description);
-            var groupedFiles = files.GroupBy(f => Path.GetDirectoryName(f.Path));
-            foreach (var group in groupedFiles)
+            try
             {
-                var photosetName = Path.GetFileName(group.Key);
-                var photosetDescription = "`" + group.Key.Replace(SyncFolder.Path, ".");
-                Dictionary<string, Photo> photos;
-                if (photosets.TryGetValue(photosetDescription, out Photoset photoset))
-                {
-                    var photosCollection = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
-                    photos = photosCollection.Distinct(new GenericEqualityComparer<Photo>(p => p.Title)).ToDictionary(p => p.Title);
-                }
-                else
-                {
-                    photos = new Dictionary<string, Photo>();
-                }
+                CurrentOperationDescription = string.Format("Sync_ParsingFolderStatus".GetLocalized(), SyncFolder.Path);
+                var queryResult = SyncFolder.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.DefaultQuery, extensions) { FolderDepth = FolderDepth.Deep });
+                var files = await queryResult.GetFilesAsync();
+                cancellationToken.ThrowIfCancellationRequested();
+                ProgressMax = files.Count;
 
-                foreach (var file in group)
+                var photosetsList = await flickr.PhotosetsGetListAsync();
+                cancellationToken.ThrowIfCancellationRequested();
+                var photosets = photosetsList.Where(ps => !string.IsNullOrWhiteSpace(ps.Description) && ps.Description[0] == '`')
+                    .Distinct(new GenericEqualityComparer<Photoset>(ps => ps.Description)).ToDictionary(ps => ps.Description);
+                var groupedFiles = files.GroupBy(f => Path.GetDirectoryName(f.Path));
+                foreach (var group in groupedFiles)
                 {
-                    if (photos.Remove(file.Name))
+                    var photosetName = Path.GetFileName(group.Key);
+                    var photosetDescription = "`" + group.Key.Replace(SyncFolder.Path, ".");
+                    Dictionary<string, Photo> photos;
+                    if (photosets.TryGetValue(photosetDescription, out Photoset photoset))
                     {
+                        var photosCollection = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
+                        photos = photosCollection.Distinct(new GenericEqualityComparer<Photo>(p => p.Title)).ToDictionary(p => p.Title);
+                    }
+                    else
+                    {
+                        photos = new Dictionary<string, Photo>();
+                    }
+
+                    foreach (var file in group)
+                    {
+                        if (photos.Remove(file.Name))
+                        {
+                            ProgressValue++;
+                            continue;
+                        }
+
+                        if (functionMode != FunctionMode.DownloadOnly)
+                        {
+                            CurrentOperationDescription = string.Format("Sync_UploadingFileStatus".GetLocalized(), file.Path);
+                            string photoId = null;
+                            using (var stream = (await file.OpenSequentialReadAsync()).AsStreamForRead())
+                            {
+                                photoId = await flickr.UploadPictureAsync(stream, file.Name, file.Name, file.Path.Replace(SyncFolder.Path, "."), "", false, false, false, ContentType.Photo, SafetyLevel.None, HiddenFromSearch.Hidden);
+                            }
+
+                            if (photoset == null)
+                            {
+                                CurrentOperationDescription = string.Format("Sync_CreatingPhotoSetStatus".GetLocalized(), photosetName);
+                                photoset = await flickr.PhotosetsCreateAsync(photosetName, photosetDescription, photoId);
+                            }
+                            else
+                            {
+                                CurrentOperationDescription = string.Format("Sync_AddingFileToPhotoSet".GetLocalized(), file.Name, photosetName);
+                                await flickr.PhotosetsAddPhotoAsync(photoset.PhotosetId, photoId);
+                            }
+                        }
+
+                        cancellationToken.ThrowIfCancellationRequested();
                         ProgressValue++;
-                        continue;
                     }
 
-                    if (functionMode != FunctionMode.DownloadOnly)
+                    if (photos.Count > 0 && functionMode != FunctionMode.UploadOnly)
                     {
-                        CurrentOperationDescription = $"Uploading file \"{file.Path}\"";
-                        string photoId = null;
-                        using (var stream = (await file.OpenSequentialReadAsync()).AsStreamForRead())
+                        ProgressMax += photos.Count;
+                        var folder = await StorageFolder.GetFolderFromPathAsync(group.Key);
+                        foreach (var photo in photos.Values.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
                         {
-                            photoId = await flickr.UploadPictureAsync(stream, file.Name, file.Name, file.Path.Replace(SyncFolder.Path, "."), "", false, false, false, ContentType.Photo, SafetyLevel.None, HiddenFromSearch.Hidden);
-                        }
-
-                        if (photoset == null)
-                        {
-                            CurrentOperationDescription = $"Creating photoset \"{photosetName}\"";
-                            photoset = await flickr.PhotosetsCreateAsync(photosetName, photosetDescription, photoId);
-                        }
-                        else
-                        {
-                            CurrentOperationDescription = $"Adding file \"{file.Name}\" to photoset \"{photosetName}\"";
-                            await flickr.PhotosetsAddPhotoAsync(photoset.PhotosetId, photoId);
+                            CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
+                            await flickr.DownloadFileAsync(folder, photo, cancellationToken);
+                            cancellationToken.ThrowIfCancellationRequested();
+                            ProgressValue++;
                         }
                     }
-
-                    ProgressValue++;
+                    photosets.Remove(photosetDescription);
                 }
-
-                if (photos.Count > 0 && functionMode != FunctionMode.UploadOnly)
+                if (functionMode != FunctionMode.UploadOnly)
                 {
-                    ProgressMax += photos.Count;
-                    var folder = await StorageFolder.GetFolderFromPathAsync(group.Key);
-                    foreach (var photo in photos.Values.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
+                    foreach (var photoset in photosets.Values)
                     {
-                        CurrentOperationDescription = $"Downloading {photo.Title}";
-                        await flickr.DownloadFileAsync(folder, photo);
-                        ProgressValue++;
+                        var folder = await CreateFolderRecursivelyAsync(SyncFolder, photoset.Description.Substring(1), cancellationToken);
+                        var photos = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
+                        ProgressMax += photos.Count;
+                        foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
+                        {
+                            CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
+                            await flickr.DownloadFileAsync(folder, photo, cancellationToken);
+                            ProgressValue++;
+                        }
                     }
                 }
-                photosets.Remove(photosetDescription);
+
+                ProgressValue = ProgressMax;
+                CurrentOperationDescription = "Finished.";
             }
-            if (functionMode != FunctionMode.UploadOnly)
+            catch (Exception)
             {
-                foreach (var photoset in photosets.Values)
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    var folder = await CreateFolderRecursivelyAsync(SyncFolder, photoset.Description.Substring(1));
-                    var photos = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
-                    ProgressMax += photos.Count;
-                    foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
-                    {
-                        CurrentOperationDescription = $"Downloading {photo.Title}";
-                        await flickr.DownloadFileAsync(folder, photo);
-                        ProgressValue++;
-                    }
+                    throw;
                 }
             }
-
-            ProgressValue = ProgressMax;
-            CurrentOperationDescription = "Finished.";
         }
 
-        private async Task<StorageFolder> CreateFolderRecursivelyAsync(StorageFolder parent, string path)
+        private async Task<StorageFolder> CreateFolderRecursivelyAsync(StorageFolder parent, string path, CancellationToken cancellationToken)
         {
             foreach (var folderName in path.Split(Path.DirectorySeparatorChar))
             {
                 parent = await parent.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
+                cancellationToken.ThrowIfCancellationRequested();
             }
             return parent;
         }
