@@ -83,6 +83,9 @@ namespace Syncr.ViewModels
         }
 
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        private const ThumbnailMode ThumbnailModeSingle = ThumbnailMode.SingleItem;
+        private const uint ThumbnailSize = 480u;
+        private const ThumbnailOptions ThumbnailOptionResize = ThumbnailOptions.ResizeThumbnail;
 
         private void Cancel()
         {
@@ -106,10 +109,7 @@ namespace Syncr.ViewModels
             {
                 CurrentOperationDescription = string.Format("Sync_ParsingFolderStatus".GetLocalized(), SyncFolder.Path);
                 var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, extensions) { FolderDepth = FolderDepth.Deep };
-                var thumbnailMode = ThumbnailMode.SingleItem;
-                uint thumbnailSize = 480u;
-                var thumbnailOption = ThumbnailOptions.ResizeThumbnail;
-                queryOptions.SetThumbnailPrefetch(thumbnailMode, thumbnailSize, thumbnailOption);
+                queryOptions.SetThumbnailPrefetch(ThumbnailModeSingle, ThumbnailSize, ThumbnailOptionResize);
                 var queryResult = SyncFolder.CreateFileQueryWithOptions(queryOptions);
                 var files = await queryResult.GetFilesAsync();
                 cancellationToken.ThrowIfCancellationRequested();
@@ -146,7 +146,7 @@ namespace Syncr.ViewModels
                         if (functionMode != FunctionMode.DownloadOnly)
                         {
                             CurrentOperationDescription = string.Format("Sync_UploadingFileStatus".GetLocalized(), file.Path);
-                            var thumbnail = await file.GetThumbnailAsync(thumbnailMode, thumbnailSize, thumbnailOption);
+                            var thumbnail = await file.GetThumbnailAsync(ThumbnailModeSingle, ThumbnailSize, ThumbnailOptionResize);
                             using (var stream = thumbnail.AsStreamForRead().AsRandomAccessStream())
                             {
                                 await PreviewImage.SetSourceAsync(stream);
@@ -175,17 +175,8 @@ namespace Syncr.ViewModels
 
                     if (photos.Count > 0 && functionMode != FunctionMode.UploadOnly)
                     {
-                        ProgressMax += photos.Count;
                         var folder = await StorageFolder.GetFolderFromPathAsync(group.Key);
-                        foreach (var photo in photos.Values.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
-                        {
-                            CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
-                            var sizes = await flickr.PhotosGetSizesAsync(photo.PhotoId);
-                            PreviewImage.UriSource = new Uri(sizes.OrderByDescending(size => Math.Abs(size.Width - thumbnailSize)).First().Url);
-                            await flickr.DownloadFileAsync(folder, photo.Title, sizes, cancellationToken);
-                            cancellationToken.ThrowIfCancellationRequested();
-                            ProgressValue++;
-                        }
+                        await UploadPhotosAsync(flickr, folder, photos.Values, cancellationToken);
                     }
                     photosets.Remove(photosetDescription);
                 }
@@ -195,15 +186,7 @@ namespace Syncr.ViewModels
                     {
                         var folder = await CreateFolderRecursivelyAsync(SyncFolder, photoset.Description.Substring(1), cancellationToken);
                         var photos = await flickr.PhotosetsGetPhotosAsync(photoset.PhotosetId);
-                        ProgressMax += photos.Count;
-                        foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
-                        {
-                            CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
-                            var sizes = await flickr.PhotosGetSizesAsync(photo.PhotoId);
-                            PreviewImage.UriSource = new Uri(sizes.OrderByDescending(size => Math.Abs(size.Width - thumbnailSize)).First().Url);
-                            await flickr.DownloadFileAsync(folder, photo.Title, sizes, cancellationToken);
-                            ProgressValue++;
-                        }
+                        await UploadPhotosAsync(flickr, folder, photos, cancellationToken);
                     }
                 }
 
@@ -219,9 +202,23 @@ namespace Syncr.ViewModels
             }
         }
 
+        private async Task UploadPhotosAsync(Flickr flickr, StorageFolder folder, ICollection<Photo> photos, CancellationToken cancellationToken)
+        {
+            ProgressMax += photos.Count;
+            foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
+            {
+                CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
+                var sizes = await flickr.PhotosGetSizesAsync(photo.PhotoId);
+                PreviewImage.UriSource = new Uri(sizes.OrderByDescending(size => Math.Abs(size.Width - ThumbnailSize)).First().Source);
+                await flickr.DownloadFileAsync(folder, photo.Title, sizes, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                ProgressValue++;
+            }
+        }
+
         private async Task<StorageFolder> CreateFolderRecursivelyAsync(StorageFolder parent, string path, CancellationToken cancellationToken)
         {
-            foreach (var folderName in path.Split(Path.DirectorySeparatorChar))
+            foreach (var folderName in path.Split(Path.DirectorySeparatorChar).SkipWhile(f => f == "."))
             {
                 parent = await parent.CreateFolderAsync(folderName, CreationCollisionOption.OpenIfExists);
                 cancellationToken.ThrowIfCancellationRequested();
