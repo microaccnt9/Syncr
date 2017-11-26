@@ -35,16 +35,15 @@ namespace Syncr.Helpers
             }
         }
 
-        internal static async Task DownloadFileAsync(this Flickr flickr, StorageFolder folder, Photo photo, CancellationToken cancellationToken)
+        internal static async Task DownloadFileAsync(this Flickr flickr, StorageFolder folder, string fileName, SizeCollection sizes, CancellationToken cancellationToken)
         {
-            var sizes = await flickr.PhotosGetSizesAsync(photo.PhotoId);
             var url = sizes.OrderByDescending(s => s.Label == "Original" ? int.MaxValue : s.Width * s.Height).First().Source;
             var request = WebRequest.CreateHttp(url);
 
             using (cancellationToken.Register(request.Abort, false))
             using (var response = await request.GetResponseAsync())
             using (var responseStream = response.GetResponseStream())
-            using (var outStream = await folder.OpenStreamForWriteAsync(photo.Title, CreationCollisionOption.ReplaceExisting))
+            using (var outStream = await folder.OpenStreamForWriteAsync(fileName, CreationCollisionOption.ReplaceExisting))
             {
                 await responseStream.CopyToAsync(outStream);
             }

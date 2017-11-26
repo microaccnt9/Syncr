@@ -15,6 +15,8 @@ namespace Syncr.Services
 
         private static Frame _frame;
 
+        public static void ClearBackStack() => Frame.BackStack.Clear();
+
         public static Frame Frame
         {
             get

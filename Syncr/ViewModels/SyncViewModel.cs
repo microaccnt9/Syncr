@@ -12,6 +12,8 @@ using Windows.Storage.Search;
 using FlickrNet;
 using System.Collections.Generic;
 using static Syncr.Services.SettingsService;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.Storage.FileProperties;
 
 namespace Syncr.ViewModels
 {
@@ -32,6 +34,14 @@ namespace Syncr.ViewModels
         {
             get { return currentOperationDescription; }
             set { Set(ref currentOperationDescription, value); }
+        }
+
+        private BitmapImage previewImage = new BitmapImage();
+
+        public BitmapImage PreviewImage
+        {
+            get { return previewImage; }
+            set { Set(ref previewImage, value); }
         }
 
         private double progressValue;
@@ -95,7 +105,12 @@ namespace Syncr.ViewModels
             try
             {
                 CurrentOperationDescription = string.Format("Sync_ParsingFolderStatus".GetLocalized(), SyncFolder.Path);
-                var queryResult = SyncFolder.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.DefaultQuery, extensions) { FolderDepth = FolderDepth.Deep });
+                var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, extensions) { FolderDepth = FolderDepth.Deep };
+                var thumbnailMode = ThumbnailMode.SingleItem;
+                uint thumbnailSize = 480u;
+                var thumbnailOption = ThumbnailOptions.ResizeThumbnail;
+                queryOptions.SetThumbnailPrefetch(thumbnailMode, thumbnailSize, thumbnailOption);
+                var queryResult = SyncFolder.CreateFileQueryWithOptions(queryOptions);
                 var files = await queryResult.GetFilesAsync();
                 cancellationToken.ThrowIfCancellationRequested();
                 ProgressMax = files.Count;
@@ -131,6 +146,11 @@ namespace Syncr.ViewModels
                         if (functionMode != FunctionMode.DownloadOnly)
                         {
                             CurrentOperationDescription = string.Format("Sync_UploadingFileStatus".GetLocalized(), file.Path);
+                            var thumbnail = await file.GetThumbnailAsync(thumbnailMode, thumbnailSize, thumbnailOption);
+                            using (var stream = thumbnail.AsStreamForRead().AsRandomAccessStream())
+                            {
+                                await PreviewImage.SetSourceAsync(stream);
+                            }
                             string photoId = null;
                             using (var stream = (await file.OpenSequentialReadAsync()).AsStreamForRead())
                             {
@@ -160,7 +180,9 @@ namespace Syncr.ViewModels
                         foreach (var photo in photos.Values.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
                         {
                             CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
-                            await flickr.DownloadFileAsync(folder, photo, cancellationToken);
+                            var sizes = await flickr.PhotosGetSizesAsync(photo.PhotoId);
+                            PreviewImage.UriSource = new Uri(sizes.OrderByDescending(size => Math.Abs(size.Width - thumbnailSize)).First().Url);
+                            await flickr.DownloadFileAsync(folder, photo.Title, sizes, cancellationToken);
                             cancellationToken.ThrowIfCancellationRequested();
                             ProgressValue++;
                         }
@@ -177,7 +199,9 @@ namespace Syncr.ViewModels
                         foreach (var photo in photos.Where(p => !p.CanDownload.HasValue || p.CanDownload.Value))
                         {
                             CurrentOperationDescription = string.Format("Sync_DownloadingFile".GetLocalized(), photo.Title);
-                            await flickr.DownloadFileAsync(folder, photo, cancellationToken);
+                            var sizes = await flickr.PhotosGetSizesAsync(photo.PhotoId);
+                            PreviewImage.UriSource = new Uri(sizes.OrderByDescending(size => Math.Abs(size.Width - thumbnailSize)).First().Url);
+                            await flickr.DownloadFileAsync(folder, photo.Title, sizes, cancellationToken);
                             ProgressValue++;
                         }
                     }
