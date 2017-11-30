@@ -20,6 +20,11 @@
                     <views:SettingsPage/>
                 </Frame>
             </PivotItem>
+            <PivotItem x:Uid="PivotItem_License">
+                <Frame>
+                    <views:LicensePage/>
+                </Frame>
+            </PivotItem>
         </Pivot>
     </Grid>
 </Page>
