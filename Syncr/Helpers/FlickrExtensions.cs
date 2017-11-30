@@ -11,6 +11,30 @@ namespace Syncr.Helpers
 {
     internal static class FlickrExtensions
     {
+        internal static async Task RetryOnFailureAsync<T>(this T instance, Func<T, Task> func, int retryCount = 3, double delay = 100d)
+        {
+            int retries = 0;
+            while (true)
+            {
+                try
+                {
+                    await func(instance);
+                }
+                catch (Exception)
+                {
+                    retries++;
+                    if (retries >= retryCount)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(delay));
+                    }
+                }
+            }
+        }
+
         internal static async Task<R> RetryOnFailureAsync<T, R>(this T instance, Func<T, Task<R>> func, int retryCount = 3, double delay = 100d)
         {
             int retries = 0;

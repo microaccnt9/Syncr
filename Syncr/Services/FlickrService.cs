@@ -106,17 +106,24 @@ namespace Syncr.Services
                 IsAuthenticated = false;
                 return IsAuthenticated;
             }
-            var user = await FlickrNet.RetryOnFailureAsync(f => f.TestLoginAsync());
-            if (user != null)
+            try
             {
-                UserName = user.UserName;
-                var info = await FlickrNet.RetryOnFailureAsync(f => f.PeopleGetInfoAsync(user.UserId));
-                IconUri = new Uri(int.TryParse(info.IconServer, out int iconServer) && iconServer > 0
-                    ? $"http://farm{info.IconFarm}.staticflickr.com/{iconServer}/buddyicons/{user.UserId}.jpg"
-                    : "https://www.flickr.com/images/buddyicon.gif");
-                IsAuthenticated = true;
+                var user = await FlickrNet.RetryOnFailureAsync(f => f.TestLoginAsync());
+                if (user != null)
+                {
+                    UserName = user.UserName;
+                    var info = await FlickrNet.RetryOnFailureAsync(f => f.PeopleGetInfoAsync(user.UserId));
+                    IconUri = new Uri(int.TryParse(info.IconServer, out int iconServer) && iconServer > 0
+                        ? $"http://farm{info.IconFarm}.staticflickr.com/{iconServer}/buddyicons/{user.UserId}.jpg"
+                        : "https://www.flickr.com/images/buddyicon.gif");
+                    IsAuthenticated = true;
+                }
+                else
+                {
+                    IsAuthenticated = false;
+                }
             }
-            else
+            catch (Exception)
             {
                 IsAuthenticated = false;
             }

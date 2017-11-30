@@ -29,17 +29,6 @@
             </Grid>
             <Button x:Uid="Main_OpenFolderToSync" Grid.Row="2" HorizontalAlignment="Center" FontSize="25" Command="{x:Bind ViewModel.FolderSelection}"/>
             <TextBlock Grid.Row="3" FontSize="25" HorizontalAlignment="Center" Text="{x:Bind ViewModel.SyncFolderPath, Mode=OneWay}"/>
-            <!--<ScrollViewer>
-                <ListView ItemsSource="{x:Bind ViewModel.Roots}">
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="model:IEmployee">
-                            <Grid>
-                                <TextBlock Text="{x:Bind Name}"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </ScrollViewer>-->
             <Button x:Uid="Main_Sync" Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="25" Command="{x:Bind ViewModel.SyncCommand, Mode=OneWay}"/>
         </Grid>
     </Grid>

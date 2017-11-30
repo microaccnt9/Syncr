@@ -57,7 +57,8 @@
             <TextBlock
                         x:Uid="Settings_Mode"
                         Style="{StaticResource BodyTextStyle}" />
-            <ListView ItemsSource="{x:Bind ViewModel.Modes}" SelectedItem="{x:Bind ViewModel.SelectedMode, Mode=TwoWay}" SelectionMode="Single" />
+            <ListView ItemsSource="{x:Bind ViewModel.Modes}" SelectedItem="{x:Bind ViewModel.SelectedMode, Mode=TwoWay}"
+                        SelectionMode="Single" Margin="{StaticResource EightTopMargin}" Background="{StaticResource SystemControlBackgroundListLowBrush}" />
         </StackPanel>
 
         <TextBlock
