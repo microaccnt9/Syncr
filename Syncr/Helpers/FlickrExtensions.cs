@@ -19,6 +19,7 @@ namespace Syncr.Helpers
                 try
                 {
                     await func(instance);
+                    return;
                 }
                 catch (Exception)
                 {
